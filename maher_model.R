@@ -54,7 +54,6 @@ parameters_table<- data.frame(cbind(teams, alpha,beta))
 #ANALISI SULLE SQUADRE
 # Dalla migliore alla peggiore per coefficiente d'attacco
 parameters_table$teams[order(parameters_table$alpha,decreasing = TRUE)]
-
 # Dalla migliore alla peggiore per coefficiente difensivo (NB: beta grande= debolezza difensiva, quindi beta piccolo= solidità difensiva)
 parameters_table$teams[order(parameters_table$beta,decreasing = F)]
 
@@ -66,3 +65,38 @@ parameters_table$teams[order(parameters_table$beta,decreasing = F)]
 #NB: se guardo ai goal totali però il milan sarebbe 4 dopo napoli lazio e inter
 #    la salernitana sembra avere una buona difesa, ma è stata la squadra che ha subito più goal di tutti
 #    ----> o ste contraddizioni dipendono dalla semplicità del modello, o c'è un errore
+
+
+
+#LIMITE DEL MODELLO DI MAHER: non considera il fattore campo
+#Analizziamo meglio
+
+# CONFRONTO SUI GOAL FATTI
+TeamHomeGoals<- vector(mode="numeric", length=length(teams))
+TeamAwayGoals<- vector(mode="numeric", length=length(teams))
+# CONFRONTO SUI GOAL SUBITI
+TeamHomeGoalsConceeded<- vector(mode="numeric", length=length(teams))
+TeamAwayGoalsConceeded<- vector(mode="numeric", length=length(teams))
+
+for (i in 1:length(teams)){
+    TeamHomeGoals[i]<- sum(serieA_2122[serieA_2122$HomeTeam== teams[i],"FTHG"])
+    TeamAwayGoals[i]<- sum(serieA_2122[serieA_2122$AwayTeam==teams[i],"FTAG"])
+    TeamHomeGoalsConceeded[i]<- sum(serieA_2122[serieA_2122$HomeTeam== teams[i],"FTAG"])
+    TeamAwayGoalsConceeded[i]<- sum(serieA_2122[serieA_2122$AwayTeam==teams[i],"FTHG"])
+}
+
+barplot(TeamHomeGoals, names.arg = teams, las=3, cex.names=0.8, col="dark green", main= "Goal scored")
+barplot(TeamAwayGoals, names.arg = teams, las=3, cex.names=0.8, add=T, col="green4")
+legend("topleft",c("Home", "Away"), col=c("dark green","green4"),fill=c("dark green","green4"))
+
+
+#14 squadre su 20 hanno segnato maggiormente in casa
+
+barplot(TeamHomeGoalsConceeded, names.arg = teams, las=3, cex.names=0.8, col="dark red", main= "Goal conceeded")
+barplot(TeamAwayGoalsConceeded, names.arg = teams, las=3, cex.names=0.8, add=T, col="indianred1")
+legend("topleft",c("Home", "Away"), col=c("dark red","indianred1"),fill=c("dark red","indianred1"))
+
+
+#14 squadre su 20 hanno concesso meno goal in casa
+
+#-->guardando questa stagione sembra chiaro l'effetto stadio, ed esso ha lo stesso effetto sia su goal fatti che goal subiti
