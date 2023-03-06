@@ -1,8 +1,8 @@
 #_______________________________________________________________________________         
 #        Author:    Giulio Fantuzzi
 #       Created:    2023/02/28
-# Last modified:    2023/03/01
-#         About:    Implementation of Maher's Model for seriaA 21-22 matches
+# Last modified:    2023/03/02
+#         About:    Implementation of Maher's Model for serieA 21-22 matches
 #_______________________________________________________________________________         
 
 
@@ -15,7 +15,7 @@ serieA_2122<- serieA_2122[,c("HomeTeam", "AwayTeam", "FTHG", "FTAG", "FTR")]
 
 #-------------------------------------------------------------------------------
 # Import log-likelihood naif function
-source("functions/Maher_naif_logike.R")
+source("functions/Maher_naif_loglike.R")
 #-------------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------------
@@ -103,11 +103,12 @@ GoalsConceeded_df$stadium<- factor(GoalsConceeded_df$stadium, levels=c("Home", "
 
 
 #CONFRONTO GOAL SEGNATI
+library(ggplot2)
 ggplot(GoalsScored_df, aes(x = team, y = goal, fill = stadium)) +
     geom_bar(stat = "identity", position = "dodge",colour="black") +
     scale_fill_manual(values = c("#145A32", "#52BE80"), 
                       labels = c("Home", "Away")) +
-    labs(x = "Squadra", y = "Goal") +
+    labs(x = "Team", y = "Goal") +
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,face="bold"))+
     ggtitle("GOAL SCORED") +
@@ -118,8 +119,27 @@ ggplot(GoalsConceeded_df, aes(x = team, y = goal, fill = stadium)) +
     geom_bar(stat = "identity", position = "dodge",colour="black") +
     scale_fill_manual(values = c("#641E16", "#EC7063"), 
                       labels = c("Home", "Away")) +
-    labs(x = "Squadra", y = "Goal") +
+    labs(x = "Team", y = "Goal") +
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,face="bold"))+
     ggtitle("GOAL CONCEEDED") +
     theme(plot.title = element_text(hjust = 0.5,face="bold"))
+
+
+#Trying some predictions:
+
+#es: sassuolo vs Milan
+#Sassuolo index
+which(teams_list=="Sassuolo")#15
+which(teams_list=="Milan")#10
+
+goal_possibli=0:4
+goal_sassuolo= dpois(goal_possibli,alpha2[15]*beta2[10])
+goal_milan= dpois(goal_possibli,alpha2[10]*beta2[15])
+
+goal_sassuolo#-->0
+goal_milan#--->1   
+
+#NB: milan sassuolo 0-0 e sassuolo milan 3-0, quindi sta stima è un risultato intermedio
+#    come anticipato, il modello di maher ha il limite che non considera l'effetto casa
+#    altro limite è che per fare previsioni di una partita A vs B e della partita B vs A portano allo stesso risultato
