@@ -1,15 +1,18 @@
 #_______________________________________________________________________________         
 #        Author:    Giulio Fantuzzi
 #       Created:    2023/03/07
-# Last modified:    2023/03/07
+# Last modified:    2023/03/08
 #         About:    Analysis of home effect in football matches
 #_______________________________________________________________________________         
 
+#-------------------------------------------------------------------------------
 # Import and select data
 serieA_2122<- read.csv("../data/serieA_21-22.csv")
 serieA_2122<- serieA_2122[,c("HomeTeam", "AwayTeam", "FTHG", "FTAG", "FTR")]
 teams_list<- names(table(serieA_2122[,"HomeTeam"]))
+#-------------------------------------------------------------------------------
 
+#-------------------------------------------------------------------------------
 # Define variables for goals scored/conceeded Home/Away
 TeamHomeGoalsScored<- vector(mode="numeric", length=length(teams_list))
 TeamAwayGoalsScored<- vector(mode="numeric", length=length(teams_list))
@@ -21,10 +24,11 @@ for (i in 1:length(teams_list)){
     TeamAwayGoalsScored[i]<- sum(serieA_2122[serieA_2122$AwayTeam==teams_list[i],"FTAG"])
     TeamHomeGoalsConceeded[i]<- sum(serieA_2122[serieA_2122$HomeTeam== teams_list[i],"FTAG"])
     TeamAwayGoalsConceeded[i]<- sum(serieA_2122[serieA_2122$AwayTeam==teams_list[i],"FTHG"])
-
 }
+#-------------------------------------------------------------------------------
 
-# Create a dataframe
+#-------------------------------------------------------------------------------
+# Create dataframes
 goalscored_df <- data.frame(Stadium=rep(c("Home", "Away"),each=20),
                      Teams=rep(teams_list,2),
                      Goals=c(TeamHomeGoalsScored,TeamAwayGoalsScored)
@@ -34,6 +38,7 @@ goalconceeded_df <- data.frame(Stadium=rep(c("Home", "Away"),each=20),
                                Teams=rep(teams_list,2),
                                Goals=c(TeamHomeGoalsConceeded,TeamAwayGoalsConceeded)
 )
+#-------------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------------
 # Plots
@@ -55,5 +60,8 @@ ggplot(goalconceeded_df, aes(x=Teams, y=Goals, fill=Stadium)) +
     ggtitle("GOAL CONCEEDED SERIE A 21-22") +
     theme(plot.title = element_text(hjust = 0.5,face="bold"))
 # 11 teams conceeded more Away, 6 conceeded more Home; 1 conceeded equally
-
+#-------------------------------------------------------------------------------
+#Another way to show this is plot goal difference Home - Away
+#-------------------------------------------------------------------------------
 #---> There's an evident home effect, and it has a bigger impact on the goal scored
+#-------------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 #_______________________________________________________________________________         
 #        Author:    Giulio Fantuzzi
 #       Created:    2023/02/28
-# Last modified:    2023/03/02
+# Last modified:    2023/03/08
 #         About:    Implementation of Maher's Model for serieA 21-22 matches
 #_______________________________________________________________________________         
 
@@ -11,64 +11,55 @@
 serieA_2122<- read.csv("../data/serieA_21-22.csv")
 # Feature selection
 serieA_2122<- serieA_2122[,c("HomeTeam", "AwayTeam", "FTHG", "FTAG", "FTR")]
+teams_list<- names(table(serieA_2122[,"HomeTeam"]))
 #-------------------------------------------------------------------------------
-
-#-------------------------------------------------------------------------------
-# Import log-likelihood naif function
-source("functions/Maher_naif_loglike.R")
-#-------------------------------------------------------------------------------
-
+# Prepare data and import log likelihood function
+# Create team dummies
+source("functions/team_dummies.R")
+serieA_2122<- team_dummies(serieA_2122)
+source("functions/Maher_loglike.R")
 #-------------------------------------------------------------------------------
 # Parameters estimation
-
 #Initial guess
 parameters_guess= rep(1,40)#both attack and defense parameters (tot= 2n)
 #NB: a zeros vector as initial guess would cause errors (in log(lambda) and log(mu))
 
-params <- optim(parameters_guess, Maher_naif_loglike, data=serieA_2122)$par
+params <- optim(parameters_guess, Maher_loglike, data=serieA_2122)$par
 #Dubbio: forse i parametri devono essere compresi tra 0 e 1???
 
 #Parameters table
-teams_list<- names(table(serieA_2122[,"HomeTeam"]))
 alpha<- params[1:20]
 beta<- params[21:40]
 parameters_table<- data.frame(cbind(teams_list, alpha,beta))
 
 #-------------------------------------------------------------------------------
-
-# loglikelihood NOT NAIF function
-# Create team dummies
-source("functions/team_dummies.R")
-serieA_2122<- team_dummies(serieA_2122)
-source("functions/Maher_loglike.R")
-params2 <- optim(parameters_guess, Maher_loglike, data=serieA_2122)$par
-alpha2<- params2[1:20]
-beta2<- params2[21:40]
-parameters_table2<- data.frame(cbind(teams_list, alpha2,beta2))
-
-
-# NON CAPISCO PERCHÈ LE 2 FUNZIONI PORTINO A PARAMETRI DIVERSI!
-# INOLTRE ANALIZZANDO I VALORI DEI COEFFICIENTI CI SON COSE STRANE:
+# FROM BETTER ATTACK TO THE WORST
+attack_table= cbind(teams_list,alpha)
+attack_table[order(-alpha),]
+# FROM BETTER DEFENCE TO THE WORST
+defence_table= cbind(teams_list,beta)
+defence_table[order(beta),]
+#-------------------------------------------------------------------------------
+#Comment: basing on serieA 20-21 final ranking, some coefficients appears strange
+#-------------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------------
-# 1)CON FUNZIONE NAIF:
-# Dalla migliore alla peggiore per coefficiente d'attacco
-parameters_table$teams[order(parameters_table$alpha,decreasing = TRUE)]
-# Dalla migliore alla peggiore per coefficiente difensivo (NB: beta grande= debolezza difensiva, quindi beta piccolo= solidità difensiva)
-parameters_table$teams[order(parameters_table$beta,decreasing = F)]
+# Try to use another optimization function: nlminb()
+params <- nlminb(start=parameters_guess, objective=Maher_loglike, data=serieA_2122)$par
+#Parameters table
+alpha<- params[1:20]
+beta<- params[21:40]
+parameters_table<- data.frame(cbind(teams_list, alpha,beta))
+# FROM BETTER ATTACK TO THE WORST
+attack_table= cbind(teams_list,alpha)
+attack_table[order(-alpha),]
+# FROM BETTER DEFENCE TO THE WORST
+defence_table= cbind(teams_list,beta)
+defence_table[order(beta),]
+#-------------------------------------------------------------------------------
+#Comment: parameters estimated by nlminb seem much more reasonable yhen using optim!
+#-------------------------------------------------------------------------------
 
-#Commenti: curioso come il Milan (vincitore del campionato) abbia un basso coefficiente di attacco
-#          il parametro difensivo però risulta molto buono (la serieA infatti è un campionato abbastanza difensivo)
-
-#NB: se guardo ai goal totali però il milan sarebbe 4 dopo napoli lazio e inter
-#    la salernitana sembra avere una buona difesa, ma è stata la squadra che ha subito più goal di tutti
-#    ----> o ste contraddizioni dipendono dalla semplicità del modello, o c'è un errore
-# 2) CON FUNZIONE MIGLIORE:
-# Dalla migliore alla peggiore per coefficiente d'attacco
-parameters_table2$teams[order(parameters_table2$alpha2,decreasing = TRUE)]
-# Dalla migliore alla peggiore per coefficiente difensivo (NB: beta grande= debolezza difensiva, quindi beta piccolo= solidità difensiva)
-parameters_table2$teams[order(parameters_table2$beta2,decreasing = F)]
-
-
-#LIMITE DEL MODELLO DI MAHER: non considera il fattore campo
-# Ma ha senso introdurlo? Analizziamo meglio la questione nello script "home_effect.R"
+#-------------------------------------------------------------------------------
+# DRAWBACK: This model doesn't consider a "home-effect"
+# Should we introduce a "home-effect"? Check the script "home_effect.R"
