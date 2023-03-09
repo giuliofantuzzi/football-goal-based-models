@@ -25,7 +25,7 @@ DixonColes_loglike<- function(parameters,data){
         lambda<-alpha[data[k,"HomeDummy"]]* beta[data[k,"AwayDummy"]]*gamma
         mu<- alpha[data[k,"AwayDummy"]]* beta[data[k,"HomeDummy"]]
         
-        loglike = loglike+log( DixonColes_tau(x,y,lambda,mu,rho))+log(dpois(x,lambda)) +log(dpois(y,mu)) 
+        loglike = loglike+log( DixonColes_tau(x,y,lambda,mu,rho))-lambda-mu+x*log(lambda)+y*log(mu)
     }
-    return(-loglike) #sign - because Max loglike is equal to Min -loglike
+    return(-1*loglike) #sign - because Max loglike is equal to Min -loglike
 }
