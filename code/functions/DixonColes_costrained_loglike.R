@@ -12,6 +12,8 @@ DixonColes_costrained_loglike<- function(parameters,data){
     #parameters of the type [a1,...,an,b1,...,bn,gamma,rho]
     n= (length(parameters)-2)/2
     alpha= parameters[1:n]
+    #oppure anzichè la if usare alpha= alpha - mean(alpha)
+    #(cosi massimizzo tenendo conto del vincolo, ma poi l'output dovrò riparametrizzarlo ovviamente!)
     beta= parameters[(n+1):(2*n)]
     gamma=parameters[2*n+1]
     rho= parameters[2*n+2]
